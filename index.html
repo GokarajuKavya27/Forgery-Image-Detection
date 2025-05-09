@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake vs. Real Image Classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container" id="container">
+        <h1>🖼️ Fake vs. Real Image Classifier</h1>
+        <input type="file" id="imageUpload" accept="image/*">
+        <div id="imagePreview"></div>
+        <button onclick="uploadImage()">Predict</button>
+        <p id="vitResult"></p>
+        <p id="cnnResult"></p>
+    </div>
+
+    <script>
+        function uploadImage() {
+            let fileInput = document.getElementById('imageUpload');
+            let file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please upload an image first!");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", file);
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("vitResult").innerText = "🖥️ ViT Prediction: " + data.vit;
+                document.getElementById("cnnResult").innerText = "🧠 CNN Prediction: " + data.cnn;
+
+                if (data.vit === "FAKE" || data.cnn === "FAKE") {
+                    document.getElementById("container").classList.add("fake");
+                } else {
+                    document.getElementById("container").classList.remove("fake");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        document.getElementById('imageUpload').addEventListener('change', function(event) {
+            let reader = new FileReader();
+            reader.onload = function() {
+                let img = document.createElement("img");
+                img.src = reader.result;
+                img.style.maxWidth = "100%";
+                document.getElementById("imagePreview").innerHTML = "";
+                document.getElementById("imagePreview").appendChild(img);
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        });
+    </script>
+</body>
+</html>
